@@ -1,6 +1,9 @@
 const express = require('express');
 const app = express();
 
+// If Node < 18, uncomment next line and install node-fetch
+// const fetch = require('node-fetch');
+
 app.use(express.json());
 
 // Root test
@@ -13,14 +16,17 @@ app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-// ✅ Webhook verification (GET)
+// ✅ 🔥 FIXED Webhook verification (GET)
 app.get('/webhook', (req, res) => {
-  const msg = req.query.msg;
+  const msg = req.query.msg || '';
 
   console.log('Verification:', msg);
 
+  // IMPORTANT: send exact plain text response (no chunking)
+  res.status(200);
   res.set('Content-Type', 'text/plain');
-  res.status(200).send(msg);
+  res.set('Content-Length', Buffer.byteLength(msg).toString());
+  res.end(msg);
 });
 
 // ✅ Webhook events (POST)
@@ -40,7 +46,7 @@ app.post('/webhook', async (req, res) => {
   res.status(200).send('OK');
 });
 
-// ✅ IMPORTANT: PORT FIX
+// ✅ PORT (Render requirement)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
