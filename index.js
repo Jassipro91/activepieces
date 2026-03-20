@@ -1,39 +1,38 @@
 const express = require('express');
 const app = express();
 
-// If Node version < 18, uncomment next line and install node-fetch
+// If Node < 18, uncomment below and install node-fetch
 // const fetch = require('node-fetch');
 
 app.use(express.json());
 
-// ✅ Root route (for testing)
+// ✅ Root route
 app.get('/', (req, res) => {
   res.send('Server is working');
 });
 
-// ✅ Health check (Render uses this)
+// ✅ Health check
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-// ✅ 🔥 FINAL BULLETPROOF VERIFICATION FIX
+// ✅ 🔥 FINAL DrChrono verification (STRICT RESPONSE)
 app.get('/webhook', (req, res) => {
   const msg = (req.query.msg || '').trim();
 
   console.log('Verification:', msg);
 
-  const response = Buffer.from(msg, 'utf-8');
+  // Set exact headers manually
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Content-Length', Buffer.byteLength(msg));
+  res.setHeader('Connection', 'close');
 
-  res.writeHead(200, {
-    'Content-Type': 'text/plain',
-    'Content-Length': response.length,
-    'Connection': 'close'
-  });
-
-  res.end(response);
+  // Send exact response
+  res.statusCode = 200;
+  res.end(msg);
 });
 
-// ✅ Handle actual events (POST)
+// ✅ Handle POST events (PING + real events)
 app.post('/webhook', async (req, res) => {
   console.log('Event received:', req.body);
 
@@ -50,7 +49,7 @@ app.post('/webhook', async (req, res) => {
   res.status(200).send('OK');
 });
 
-// ✅ IMPORTANT: Render port handling
+// ✅ Render port handling
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
