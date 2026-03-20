@@ -1,38 +1,29 @@
 const express = require('express');
 const app = express();
 
-// If Node < 18, uncomment below and install node-fetch
-// const fetch = require('node-fetch');
-
 app.use(express.json());
 
-// ✅ Root route
+// Root test
 app.get('/', (req, res) => {
   res.send('Server is working');
 });
 
-// ✅ Health check
+// Health check
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-// ✅ 🔥 FINAL DrChrono verification (STRICT RESPONSE)
+// ✅ Webhook verification (GET)
 app.get('/webhook', (req, res) => {
-  const msg = (req.query.msg || '').trim();
+  const msg = req.query.msg;
 
   console.log('Verification:', msg);
 
-  // Set exact headers manually
-  res.setHeader('Content-Type', 'text/plain');
-  res.setHeader('Content-Length', Buffer.byteLength(msg));
-  res.setHeader('Connection', 'close');
-
-  // Send exact response
-  res.statusCode = 200;
-  res.end(msg);
+  res.set('Content-Type', 'text/plain');
+  res.status(200).send(msg);
 });
 
-// ✅ Handle POST events (PING + real events)
+// ✅ Webhook events (POST)
 app.post('/webhook', async (req, res) => {
   console.log('Event received:', req.body);
 
@@ -42,14 +33,14 @@ app.post('/webhook', async (req, res) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req.body)
     });
-  } catch (error) {
-    console.error('Forward error:', error);
+  } catch (err) {
+    console.error('Forward error:', err);
   }
 
   res.status(200).send('OK');
 });
 
-// ✅ Render port handling
+// ✅ IMPORTANT: PORT FIX
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
